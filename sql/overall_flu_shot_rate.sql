@@ -1,14 +1,28 @@
+-- ============================================================
 -- Flu Shot Care Gap Analysis: Overall Summary (Measurement Year 2025)
+-- ============================================================
 --
--- Purpose: validate the dashboard with one trusted number.
--- Returns eligible members, vaccinated members, members missing
--- a flu shot, and the overall vaccination rate (expected: 801, 116, 685, 14.5).
+-- What this file does:
+-- Collapses the member list into one row with four numbers:
+-- eligible members, vaccinated members, members missing a shot,
+-- and the overall vaccination rate. I use it to validate the
+-- dashboard: every chart must agree with these numbers.
 --
--- Eligibility rules:
---   Active member: at least one encounter between 2023-01-01 and 2025-12-31
---   Alive: no death date
---   At least 6 months old by 2025-12-31 (CDC: everyone 6 months and older
---   should get a flu shot every year)
+-- Expected result: 801 eligible, 116 vaccinated, 685 missing, 14.5%
+--
+-- How it works:
+-- Uses the same three CTEs as flu_shot_care_gaps.sql
+-- (active_patients, flu_shot_2025, member_list), so both files
+-- apply identical eligibility rules.
+--
+-- Final select:
+-- count(*)                  total eligible members
+-- sum(flu_shot_2025)        vaccinated members (0s add nothing)
+-- count(*) - sum(...)       members missing a flu shot
+-- round(100.0 * ... , 1)    rate as a percent; 100.0 forces decimal
+--                           division, since whole number division
+--                           in PostgreSQL drops the decimals
+-- ============================================================
 
 with active_patients as (
   select distinct e.patient
