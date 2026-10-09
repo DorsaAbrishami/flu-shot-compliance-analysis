@@ -1,13 +1,27 @@
+
 -- Flu Shot Care Gap Analysis: Member List (Measurement Year 2025)
+-- ============================================================
 --
--- Purpose: one row per eligible member with a 1/0 flu shot flag.
--- This is the data source for the Tableau dashboard.
+-- What this file does:
+-- Returns one row per eligible member (801 rows) with a 1/0 flag
+-- showing whether they got a flu shot in 2025. This is the data
+-- source for the Tableau dashboard. Tableau groups these rows by
+-- age, race, and county, and averages the 1/0 flag to get each
+-- group's vaccination rate (the average of 1s and 0s equals the
+-- share of 1s).
 --
--- Eligibility rules:
---   Active member: at least one encounter between 2023-01-01 and 2025-12-31
---   Alive: no death date
---   At least 6 months old by 2025-12-31 (CDC: everyone 6 months and older
---   should get a flu shot every year)
+-- How it works:
+-- 1) active_patients: members with at least one visit from
+--    2023-01-01 to 2025-12-31, alive, and at least 6 months old
+--    by 2025-12-31 (CDC guideline). This is the denominator.
+-- 2) flu_shot_2025: members with a flu shot (code 140) in 2025,
+--    keeping only the earliest shot so no member is counted twice.
+-- 3) member_list: joins the two with a LEFT JOIN so unvaccinated
+--    members stay in the data as care gaps, and turns the result
+--    into a 1/0 column with CASE.
+--
+-- Final select: returns every member with their details and flag.
+-- ============================================================
 
 with active_patients as (
   select distinct e.patient
